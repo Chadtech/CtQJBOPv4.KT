@@ -5,6 +5,7 @@ oscillatorVoice = (oscillatorType) ->
 
   oscillatorPrimitive = context.createOscillator()
   oscillatorPrimitive.frequency.value = 101
+  oscillatorPrimitive.type = oscillatorType
 
   volumePrimitive = context.createGain()
   volumePrimitive.gain.value = 0
@@ -17,7 +18,7 @@ oscillatorVoice = (oscillatorType) ->
   oscillator : oscillatorPrimitive
   volume : volumePrimitive
   availability : true
-  oscillatorType : oscillatorType or 'sine'
+  #oscillatorType : oscillatorType or 'sine'
   stimulusKey : 9000
 
   setFrequency : (newFrequency) ->
@@ -28,12 +29,13 @@ oscillatorVoice = (oscillatorType) ->
       @setFrequency(newFrequency)
     now = context.currentTime
     @volume.gain.setValueAtTime(0,now)
-    @volume.gain.linearRampToValueAtTime(0.2,now+0.01)
+    @volume.gain.linearRampToValueAtTime(0.2,now+0.005)
     @availability = false
 
   end : () ->
     now = context.currentTime
-    @volume.gain.linearRampToValueAtTime(0,now+0.01)
+    @volume.gain.setValueAtTime(0.2,now)
+    @volume.gain.linearRampToValueAtTime(0,now+0.005)
     @availability = true
 
 oscillatorGroup = [
