@@ -52,9 +52,7 @@ findTone = (eventKey) ->
     keySuspect = 0
     while keySuspect < rows[rowSuspect].length and keepGoin
       if eventKey == rows[rowSuspect][keySuspect]
-        console.log 'A'
         tone = tones[keySuspect%tones.length]*Math.pow(2,rowSuspect+Math.floor(keySuspect/tones.length))*100
-        console.log 'B', tone, tones[keySuspect%tones.length]
         keepGoin = false
       keySuspect++
     rowSuspect++
