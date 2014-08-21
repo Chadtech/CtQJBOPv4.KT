@@ -36,6 +36,7 @@ oscillatorVoice = (oscillatorType) ->
     now = context.currentTime
     @volume.gain.setValueAtTime(0.2,now)
     @volume.gain.linearRampToValueAtTime(0,now+0.005)
+    @oscillator.stop(0.007)
     @availability = true
 
 oscillatorGroup = [
@@ -153,6 +154,7 @@ $(document).ready ()->
     while oscillatorIndex < oscillatorGroup.length
       if oscillatorGroup[oscillatorIndex].stimulusKey == event.which
         oscillatorGroup[oscillatorIndex].end()
+        oscillatorGroup[oscillatorIndex] = new oscillatorVoice('sawtooth')
       oscillatorIndex++
     draw()
 
