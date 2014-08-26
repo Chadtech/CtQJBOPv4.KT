@@ -1,6 +1,8 @@
 window.AudioContext = window.AudioContext or window.webkitAudioContext
 context = new AudioContext()
 
+oscillatorGroup = {}
+
 oscillatorVoice = (oscillatorType, frequencyValue) ->
 
   oscillatorPrimitive = context.createOscillator()
@@ -15,31 +17,32 @@ oscillatorVoice = (oscillatorType, frequencyValue) ->
 
   oscillatorPrimitive.start(0)
 
-  oscillator : oscillatorPrimitive
-  volume : volumePrimitive
-  availability : true
-  #oscillatorType : oscillatorType or 'sine'
-  stimulusKey : 9000
+  oscillator: oscillatorPrimitive
+  volume: volumePrimitive
+  availability: true
+  stimulusKey: 9000
 
-  setFrequency : (newFrequency) ->
+  setFrequency: (newFrequency) ->
     @oscillator.frequency.value = newFrequency
 
-  begin : () ->
+  begin: ->
     now = context.currentTime
     @volume.gain.setValueAtTime(0,now)
     @volume.gain.linearRampToValueAtTime(0.2,now+0.005)
     @availability = false
 
-  end : () ->
+  end: ->
     now = context.currentTime
     @volume.gain.setValueAtTime(0.2,now)
     @volume.gain.linearRampToValueAtTime(0,now+0.005)
-    @oscillator.stop(0.007)
-    setTimeout(0.001, ()->
-      @oscillator.disconnect())
+    @oscillator.stop(now+0.007)
+    keyToRemove = @stimulusKey
+    setTimeout(()->
+      delete oscillatorGroup[keyToRemove]
+      draw()
+    , 0.01)
     @availability = true
 
-oscillatorGroup = []
 
 findTone = (eventKey) ->
   tone = ''
@@ -131,7 +134,6 @@ while primeSystem < scales.length
 primeSystem = 0
 ofSystem = 0
 
-
 selected = new Image()
 selected.src = 'selected.png'
 notSelected = new Image()
@@ -185,9 +187,6 @@ draw = ()->
   chadtechCanvas.drawImage(title,xMargin,yMargin)
   chadtechCanvas.drawImage(numbersToNumerals[primeSystem],xMargin+title.width, yMargin)
   chadtechCanvas.drawImage(numbersToNumerals[ofSystem],xMargin+title.width+12, yMargin)
-  currentlyPressedKeys = []
-  oscillatorGroup.forEach (element)->
-    currentlyPressedKeys.push element.stimulusKey*(!element.availability)
   rowNumber = 0
   while rowNumber < rows.length
     columnNumber = 0
@@ -195,12 +194,9 @@ draw = ()->
       chadtechCanvas.drawImage(notSelected, (columnNumber*64)+(rowNumber*16)+xMargin, (rowNumber*64)+yMargin+16)
       chadtechCanvas.drawImage(numbersToNumerals[columnNumber%7],(columnNumber*64)+(rowNumber*16)+45+xMargin,(rowNumber*64)+20+yMargin)
       chadtechCanvas.drawImage(numbersToNumerals[rowNumber+Math.floor(columnNumber/7)],(columnNumber*64)+(rowNumber*16)+33+xMargin,(rowNumber*64)+20+yMargin)
+      if oscillatorGroup[rows[rowNumber][columnNumber]]
+        chadtechCanvas.drawImage(selected, (columnNumber*64)+(rowNumber*16)+xMargin, (rowNumber*64)+yMargin+16)        
       columnNumber++
-    currentlyPressedKeyIndex = 0
-    while currentlyPressedKeyIndex < currentlyPressedKeys.length
-      if rows[rowNumber].indexOf(currentlyPressedKeys[currentlyPressedKeyIndex])!= -1
-       chadtechCanvas.drawImage(selected, (rows[rowNumber].indexOf(currentlyPressedKeys[currentlyPressedKeyIndex])*64)+(rowNumber*16)+xMargin, (rowNumber*64)+yMargin+16)
-      currentlyPressedKeyIndex++
     rowNumber++
 
 changeScale = (keyCode)->
@@ -221,30 +217,20 @@ changeScale = (keyCode)->
 $(document).ready ()->
   $('body').keydown (event)->
     if (41<event.which) or (event.which<37)
-      currentlyPressedKeys = []
-      oscillatorGroup.forEach (element)->
-        currentlyPressedKeys.push element.stimulusKey*(!element.availability)
-      if currentlyPressedKeys.indexOf(event.which)== -1
-        oscillatorGroup.push(new oscillatorVoice('sawtooth', findTone(event.which)))
-        oscillatorGroup[oscillatorGroup.length-1].stimulusKey = event.which
-        oscillatorGroup[oscillatorGroup.length-1].begin()
+      if not oscillatorGroup[event.which]
+        oscillatorGroup[event.which] = new oscillatorVoice('sawtooth', findTone(event.which))
+        keyJustPressed = event.which
+        oscillatorGroup[event.which].stimulusKey = keyJustPressed
+        oscillatorGroup[event.which].begin()
     else
-     changeScale(event.which)
+      changeScale(event.which)
     draw()
 
-
-$(document).ready ()->
   $('body').keyup (event)->
-    oscillatorIndex = 0
-    while oscillatorIndex < oscillatorGroup.length
-      if oscillatorGroup[oscillatorIndex].stimulusKey == event.which
-        oscillatorGroup[oscillatorIndex].end()
-        oscillatorGroup[oscillatorIndex] = new oscillatorVoice('sawtooth')
-      oscillatorIndex++
-    draw()
+    oscillatorGroup[event.which].end()
 
-$(window).resize ()->
-  draw()
+  $(window).resize ()->
+    draw()
 
 setTimeout(()-> 
   draw()
