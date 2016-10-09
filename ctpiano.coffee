@@ -13,9 +13,9 @@ oscillatorVoice = (oscillatorType, frequencyValue) ->
   volumePrimitive.gain.value = 0
 
   lopassFilter = context.createBiquadFilter()
-  lopassFilter.type = 0
-  lopassFilter.frequency.value = 2000
-
+  lopassFilter.type = 'lowpass'
+  lopassFilter.frequency = 1000
+  lopass.q = 2
 
   oscillatorPrimitive.connect(volumePrimitive)
   volumePrimitive.connect(lopassFilter)
